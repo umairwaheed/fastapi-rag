@@ -1,0 +1,56 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.myenv/
+
+# Django specific files
+db.sqlite3
+*.sqlite3-journal
+/media/
+
+# Logs
+logs/
+*.log
+debug.log
+
+# Environment variables and settings
+.env
+*.env
+config/settings/local.py
+config/settings/*.local.py
+
+# Cache files
+*.cache
+*.mo
+*.pot
+*.pyc
+
+# IDE/editor files
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+
+# MacOS system files
+.DS_Store
+
+# Node.js dependencies (if using npm/yarn for frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Docker-related files (if using Docker)
+docker-compose.override.yml
+
+# Coverage reports
+htmlcov/
+.coverage
+.tox/
+nosetests.xml
+coverage.xml
+*.cover

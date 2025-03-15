@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Exit script on any error
+set -e
+
+echo "🔄 Running Black..."
+black .
+
+echo "🔄 Running isort..."
+isort .
+
+echo "🔄 Running flake8..."
+flake8 .
+
+echo "✅ Formatting and linting complete!"

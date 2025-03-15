@@ -1,0 +1,35 @@
+[tool.black]
+line-length = 88
+target-version = ['py313']
+exclude = '''
+(
+    venv
+    | .git
+    | __pycache__
+    | .pyc
+    | .env
+)
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+line_length = 88
+
+[tool.pyright]
+reportGeneralTypeIssues = false
+exclude = ["venv"]
+extraPaths = ["./venv/lib/python3.13/site-packages"]
+pythonVersion = "3.13"
+typeCheckingMode = "basic"
+
+[tool.mypy]
+ignore_missing_imports = true
+exclude = ["migrations", "venv", ".venv"]
+python_version = "3.13"
+
+[tool.pytest.ini_options]
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
