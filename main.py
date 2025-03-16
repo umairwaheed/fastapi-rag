@@ -98,7 +98,7 @@ def get_current_admin(current_user: User = Depends(get_current_user)):
 app = FastAPI()
 
 
-@app.post("/token")
+@app.post("/api/token/")
 def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_session)
 ):
@@ -115,7 +115,7 @@ def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.post("/users/")
+@app.post("/api/users/")
 def create_user(
     user: User,
     db: Session = Depends(get_session),
@@ -127,12 +127,12 @@ def create_user(
     return user
 
 
-@app.get("/users/me")
+@app.get("/api/users/me/")
 def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@app.get("/users/{user_id}")
+@app.get("/api/users/{user_id}/")
 def read_user(user_id: uuid.UUID, db: Session = Depends(get_session)):
     user = db.get(User, user_id)
     if user is None:
@@ -143,7 +143,7 @@ def read_user(user_id: uuid.UUID, db: Session = Depends(get_session)):
     return user
 
 
-@app.put("/users/{user_id}")
+@app.put("/api/users/{user_id}/")
 def update_user(
     user_id: uuid.UUID,
     updated_user: User,
@@ -165,7 +165,7 @@ def update_user(
     return user
 
 
-@app.delete("/users/{user_id}", dependencies=[Depends(get_current_admin)])
+@app.delete("/api/users/{user_id}/", dependencies=[Depends(get_current_admin)])
 def delete_user(user_id: uuid.UUID, db: Session = Depends(get_session)):
     user = db.get(User, user_id)
     if user is None:
