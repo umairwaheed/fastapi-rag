@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get("/")
-def get_all_users(
+def get_users(
     user: User = Depends(get_current_user), session: Session = Depends(get_session)
 ):
     query = select(User)
@@ -23,7 +23,7 @@ def get_all_users(
 
 
 @router.post("/")
-def create_user(
+def post_user(
     user: User,
     session: Session = Depends(get_session),
 ):
@@ -35,12 +35,12 @@ def create_user(
 
 
 @router.get("/me/")
-def read_users_me(current_user: User = Depends(get_current_user)):
+def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
 @router.get("/{user_id}/")
-def read_user(user_id: uuid.UUID, session: Session = Depends(get_session)):
+def get_user(user_id: uuid.UUID, session: Session = Depends(get_session)):
     user = session.get(User, user_id)
     if user is None:
         raise HTTPException(
@@ -51,7 +51,7 @@ def read_user(user_id: uuid.UUID, session: Session = Depends(get_session)):
 
 
 @router.put("/{user_id}/")
-def update_user(
+def put_user(
     user_id: uuid.UUID,
     updated_user: User,
     session: Session = Depends(get_session),
