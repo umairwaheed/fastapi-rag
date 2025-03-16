@@ -41,7 +41,7 @@ class User(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
-    hashed_password: str
+    password: str
     role: Role = Field(default=Role.USER)
 
 
@@ -50,7 +50,7 @@ SQLModel.metadata.create_all(engine)
 
 
 # Dependency to get DB session
-def get_db():
+def get_session():
     with Session(engine) as session:
         yield session
 
@@ -76,7 +76,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_session)
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -109,10 +109,10 @@ app = FastAPI()
 # Authentication Route
 @app.post("/token")
 def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_session)
 ):
     user = get_user_by_username(db, form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -127,16 +127,10 @@ def login_for_access_token(
 # CRUD Operations
 @app.post("/users/")
 def create_user(
-    username: str,
-    email: str,
-    password: str,
-    role: Role = Role.USER,
-    db: Session = Depends(get_db),
+    user: User,
+    db: Session = Depends(get_session),
 ):
-    hashed_password = get_password_hash(password)
-    user = User(
-        username=username, email=email, hashed_password=hashed_password, role=role
-    )
+    user.password = get_password_hash(user.password)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -149,7 +143,7 @@ def read_users_me(current_user: User = Depends(get_current_user)):
 
 
 @app.get("/users/{user_id}")
-def read_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
+def read_user(user_id: uuid.UUID, db: Session = Depends(get_session)):
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -159,19 +153,16 @@ def read_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
 @app.put("/users/{user_id}")
 def update_user(
     user_id: uuid.UUID,
-    username: str,
-    email: str,
-    password: str,
-    role: Role,
-    db: Session = Depends(get_db),
+    updated_user: User,
+    db: Session = Depends(get_session),
 ):
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    user.username = username
-    user.email = email
-    user.hashed_password = get_password_hash(password)
-    user.role = role
+    user.username = updated_user.username
+    user.email = updated_user.email
+    user.password = get_password_hash(updated_user.password)
+    user.role = updated_user.role
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -179,7 +170,7 @@ def update_user(
 
 
 @app.delete("/users/{user_id}", dependencies=[Depends(get_current_admin)])
-def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_user(user_id: uuid.UUID, db: Session = Depends(get_session)):
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
