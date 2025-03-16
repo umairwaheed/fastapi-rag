@@ -49,7 +49,6 @@ def query_text(request: QueryRequest, session: Session = Depends(get_session)):
 
     context = "\n".join([chunk.chunk_text for chunk in top_chunks])
 
-    print(openai.chat.completions.create)
     response = openai.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
