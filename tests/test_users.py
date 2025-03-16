@@ -1,10 +1,12 @@
+from datetime import timedelta
+
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, StaticPool, create_engine
 
 from app.dependencies import get_session
-from app.helpers import get_password_hash
+from app.helpers import create_access_token, get_password_hash
 from app.main import app
 from app.models import Role, User
 
@@ -52,6 +54,60 @@ def test_user(test_user_data, session: Session):
     session.commit()
     session.refresh(user)
     return user
+
+
+@pytest.fixture
+def test_admin(session: Session):
+    user = User(
+        username="testadmin",
+        email="testadmin@example.com",
+        password=get_password_hash("password123"),
+        role=Role.ADMIN,
+    )
+
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def user_token(test_user: User):
+    return create_access_token(
+        data={"sub": test_user.username, "role": test_user.role},
+        expires_delta=timedelta(minutes=10),
+    )
+
+
+@pytest.fixture
+def admin_token(test_admin: User):
+    return create_access_token(
+        data={"sub": test_admin.username, "role": test_admin.role},
+        expires_delta=timedelta(minutes=10),
+    )
+
+
+@pytest.fixture
+def test_users(test_admin: User, test_user: User):
+    return [test_user, test_admin]
+
+
+def test_get_users(client: TestClient, test_users: list[User], user_token: str):
+    response = client.get("/users/", headers={"Authorization": f"Bearer {user_token}"})
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["username"] == test_users[0].username
+
+
+def test_admin_can_get_all_users(
+    client: TestClient, test_users: list[User], admin_token: str
+):
+    response = client.get("/users/", headers={"Authorization": f"Bearer {admin_token}"})
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert len(data) == 2
+    assert {x.username for x in test_users} == {x["username"] for x in data}
 
 
 def test_create_user(client: TestClient, test_user_data: dict):

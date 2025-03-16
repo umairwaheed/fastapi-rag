@@ -1,15 +1,25 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.dependencies import get_current_admin, get_current_user, get_session
-from app.helpers import (
-    get_password_hash,
-)
-from app.models import User
+from app.helpers import get_password_hash
+from app.models import Role, User
 
 router = APIRouter()
+
+
+@router.get("/")
+def get_all_users(
+    user: User = Depends(get_current_user), session: Session = Depends(get_session)
+):
+    query = select(User)
+
+    if user.role != Role.ADMIN:
+        query = query.where(User.id == user.id)
+
+    return session.exec(query).all()
 
 
 @router.post("/")

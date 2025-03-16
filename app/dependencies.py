@@ -8,7 +8,7 @@ from app.db import engine
 from app.helpers import ALGORITHM, SECRET_KEY, get_user_by_username
 from app.models import Role, User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token/")
 
 
 def get_session():
