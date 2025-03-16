@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
@@ -16,3 +18,18 @@ def test_upload_text(client: TestClient, sample_text, session: Session):
     ).all()
     assert len(chunks) == 1
     assert chunks[0].chunk_text == sample_text
+
+
+@patch("openai.chat.completions.create")
+def test_query_text(mock_openai, client: TestClient):
+    mock_openai.return_value = MagicMock()
+    mock_openai.return_value.choices = [
+        MagicMock(message=MagicMock(content="This is a mocked response from OpenAI."))
+    ]
+
+    response = client.post("/rag/query/", json={"text": "What is the document about?"})
+    assert response.status_code == 200
+    data = response.json()
+    assert "answer" in data
+    assert data["answer"] == "This is a mocked response from OpenAI."
+    assert "context" in data

@@ -1,7 +1,8 @@
 import os
 
 import openai
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.dependencies import get_session
@@ -12,6 +13,10 @@ router = APIRouter()
 
 client = openai.Client()
 client.api_key = os.getenv("OPENAI_API_KEY")
+
+
+class QueryRequest(BaseModel):
+    text: str
 
 
 @router.post("/upload/")
@@ -36,17 +41,15 @@ def upload_text(document: Document, session: Session = Depends(get_session)):
 
 
 @router.post("/query/")
-def query_text(query: str, session: Session = Depends(get_session)):
-    query_embedding = create_embedding(query)
+def query_text(request: QueryRequest, session: Session = Depends(get_session)):
+    query_embedding = create_embedding(request.text)
 
     stmt = select(Chunk).order_by(Chunk.embedding.op("<=>")(query_embedding)).limit(3)
     top_chunks = session.exec(stmt).all()
 
-    if not top_chunks:
-        raise HTTPException(status_code=404, detail="No relevant documents found")
-
     context = "\n".join([chunk.chunk_text for chunk in top_chunks])
 
+    print(openai.chat.completions.create)
     response = openai.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -54,7 +57,10 @@ def query_text(query: str, session: Session = Depends(get_session)):
                 "role": "system",
                 "content": "Answer the question based on the provided context.",
             },
-            {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {query}"},
+            {
+                "role": "user",
+                "content": f"Context:\n{context}\n\nQuestion: {request.text}",
+            },
         ],
     )
 
