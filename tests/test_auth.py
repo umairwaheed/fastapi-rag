@@ -8,7 +8,7 @@ from app.models import User
 
 def test_login_for_access_token(client: TestClient, test_user: User):
     response = client.post(
-        "/auth/token/", data={"username": "testuser", "password": "password123"}
+        "/auth/login/", data={"username": "testuser", "password": "password123"}
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()

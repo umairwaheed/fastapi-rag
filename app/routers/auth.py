@@ -16,8 +16,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 router = APIRouter()
 
 
-@router.post("/token/")
-def login_for_access_token(
+@router.post("/login/")
+def post_login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session),
 ):

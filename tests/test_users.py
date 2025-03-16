@@ -30,7 +30,7 @@ def test_create_user(client: TestClient, test_user_data: dict):
 
 def test_read_users_me(client: TestClient, test_user: User):
     login_response = client.post(
-        "/auth/token/", data={"username": "testuser", "password": "password123"}
+        "/auth/login/", data={"username": "testuser", "password": "password123"}
     )
     token = login_response.json()["access_token"]
     response = client.get("/users/me/", headers={"Authorization": f"Bearer {token}"})
