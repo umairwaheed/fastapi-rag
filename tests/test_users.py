@@ -28,13 +28,23 @@ def test_get_users_with_less_privilege(client: TestClient):
 
 
 def test_post_user(client: TestClient, test_user_data: dict, admin_token: str):
-    response = client.post("/users/", json=test_user_data, headers={"Authorization": f"Bearer {admin_token}"})
+    response = client.post(
+        "/users/",
+        json=test_user_data,
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["username"] == test_user_data["username"]
 
 
-def test_post_user_with_less_privilege(client: TestClient, test_user_data: dict, user_token: str):
-    response = client.post("/users/", json=test_user_data, headers={"Authorization": f"Bearer {user_token}"})
+def test_post_user_with_less_privilege(
+    client: TestClient, test_user_data: dict, user_token: str
+):
+    response = client.post(
+        "/users/",
+        json=test_user_data,
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
     response = client.post("/users/", json=test_user_data)
@@ -42,7 +52,9 @@ def test_post_user_with_less_privilege(client: TestClient, test_user_data: dict,
 
 
 def test_get_me(client: TestClient, test_user: User, user_token: str):
-    response = client.get("/users/me/", headers={"Authorization": f"Bearer {user_token}"})
+    response = client.get(
+        "/users/me/", headers={"Authorization": f"Bearer {user_token}"}
+    )
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["username"] == test_user.username
 
