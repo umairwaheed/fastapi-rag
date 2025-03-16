@@ -28,7 +28,18 @@ def create_test_database():
         connection.autocommit = True
         with connection.cursor() as cursor:
             cursor.execute(f"CREATE DATABASE {TEST_DB};")
-            cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+
+        connection.close()
+    except DuplicateDatabase:
+        pass
+
+    try:
+        connection = connect(
+            database=TEST_DB, user=USER, password=PASSWORD, host=HOST, port=PORT
+        )
+        connection.autocommit = True
+        with connection.cursor() as cursor:
+            cursor.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
         connection.close()
     except DuplicateDatabase:
