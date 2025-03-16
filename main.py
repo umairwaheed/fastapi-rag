@@ -1,25 +1,24 @@
+import os
 from datetime import datetime, timedelta
 from enum import Enum
 
 import jwt
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
-from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, sessionmaker
+from sqlmodel import Field, Session, SQLModel, create_engine, select
+
+# Load environment variables
+load_dotenv()
 
 # Database Configuration
-SQLALCHEMY_DATABASE_URL = "sqlite:///./db.sqlite3"
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./db.sqlite3")
+engine = create_engine(DATABASE_URL, echo=True)
 
 # JWT Configuration
-SECRET_KEY = "your_secret_key"
+SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -37,30 +36,27 @@ class Role(str, Enum):
 
 
 # Database Models
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    role = Column(String, default=Role.USER)
+class User(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    username: str = Field(unique=True, index=True)
+    email: str = Field(unique=True, index=True)
+    hashed_password: str
+    role: Role = Field(default=Role.USER)
 
 
-Base.metadata.create_all(bind=engine)
+# Create Database Tables
+SQLModel.metadata.create_all(engine)
 
 
 # Dependency to get DB session
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    with Session(engine) as session:
+        yield session
 
 
 # Helper Functions
 def get_user_by_username(db: Session, username: str):
-    return db.query(User).filter(User.username == username).first()
+    return db.exec(select(User).where(User.username == username)).first()
 
 
 def verify_password(plain_password, hashed_password):
@@ -153,7 +149,7 @@ def read_users_me(current_user: User = Depends(get_current_user)):
 
 @app.get("/users/{user_id}")
 def read_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -168,13 +164,14 @@ def update_user(
     role: Role,
     db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     user.username = username
     user.email = email
     user.hashed_password = get_password_hash(password)
     user.role = role
+    db.add(user)
     db.commit()
     db.refresh(user)
     return user
@@ -182,7 +179,7 @@ def update_user(
 
 @app.delete("/users/{user_id}", dependencies=[Depends(get_current_admin)])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     db.delete(user)
