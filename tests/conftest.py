@@ -126,3 +126,8 @@ def admin_token(test_admin: User):
 @pytest.fixture
 def test_users(test_admin: User, test_user: User):
     return [test_user, test_admin]
+
+
+@pytest.fixture
+def sample_text():
+    return "This is a sample document for testing retrieval-augmented generation."

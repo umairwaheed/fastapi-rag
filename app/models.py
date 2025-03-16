@@ -28,4 +28,4 @@ class Chunk(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     document_id: uuid.UUID = Field(foreign_key="document.id")
     chunk_text: str
-    embedding: Any = Field(sa_type=Vector(1536))
+    embedding: Any = Field(sa_type=Vector(384))
