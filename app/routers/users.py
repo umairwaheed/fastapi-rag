@@ -22,7 +22,7 @@ def get_users(
     return session.exec(query).all()
 
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(get_current_admin)])
 def post_user(
     user: User,
     session: Session = Depends(get_session),
