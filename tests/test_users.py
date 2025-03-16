@@ -55,14 +55,14 @@ def test_user(test_user_data, session: Session):
 
 
 def test_create_user(client: TestClient, test_user_data: dict):
-    response = client.post("/api/users/", json=test_user_data)
+    response = client.post("/users/", json=test_user_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["username"] == test_user_data["username"]
 
 
 def test_login_for_access_token(client: TestClient, test_user: User):
     response = client.post(
-        "/api/token/", data={"username": "testuser", "password": "password123"}
+        "/auth/token/", data={"username": "testuser", "password": "password123"}
     )
     assert response.status_code == status.HTTP_200_OK
     assert "access_token" in response.json()
@@ -70,18 +70,16 @@ def test_login_for_access_token(client: TestClient, test_user: User):
 
 def test_read_users_me(client: TestClient, test_user: User):
     login_response = client.post(
-        "/api/token/", data={"username": "testuser", "password": "password123"}
+        "/auth/token/", data={"username": "testuser", "password": "password123"}
     )
     token = login_response.json()["access_token"]
-    response = client.get(
-        "/api/users/me/", headers={"Authorization": f"Bearer {token}"}
-    )
+    response = client.get("/users/me/", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["username"] == test_user.username
 
 
 def test_read_user(client: TestClient, test_user: User):
-    response = client.get(f"/api/users/{test_user.id}")
+    response = client.get(f"/users/{test_user.id}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["username"] == "testuser"
 
@@ -93,11 +91,11 @@ def test_update_user(client: TestClient, test_user: User):
         "password": "newpassword",
         "role": "user",
     }
-    response = client.put(f"/api/users/{test_user.id}/", json=updated_data)
+    response = client.put(f"/users/{test_user.id}/", json=updated_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["username"] == "updateduser"
 
 
 def test_delete_user(client: TestClient, test_user: User):
-    response = client.delete(f"/api/users/{test_user.id}/")
+    response = client.delete(f"/users/{test_user.id}/")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
