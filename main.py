@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import datetime, timedelta
 from enum import Enum
 
@@ -37,7 +38,7 @@ class Role(str, Enum):
 
 # Database Models
 class User(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     hashed_password: str
@@ -148,7 +149,7 @@ def read_users_me(current_user: User = Depends(get_current_user)):
 
 
 @app.get("/users/{user_id}")
-def read_user(user_id: int, db: Session = Depends(get_db)):
+def read_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -157,7 +158,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 @app.put("/users/{user_id}")
 def update_user(
-    user_id: int,
+    user_id: uuid.UUID,
     username: str,
     email: str,
     password: str,
@@ -178,7 +179,7 @@ def update_user(
 
 
 @app.delete("/users/{user_id}", dependencies=[Depends(get_current_admin)])
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
