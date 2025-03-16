@@ -1,20 +1,46 @@
+import os
 from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, StaticPool, create_engine
+from psycopg2 import connect
+from psycopg2.errors import DuplicateDatabase
+from sqlmodel import Session, SQLModel, create_engine
 
 from app.dependencies import get_session
 from app.helpers import create_access_token, get_password_hash
 from app.main import app
 from app.models import Role, User
 
+USER = os.getenv("POSTGRES_USER")
+PASSWORD = os.getenv("POSTGRES_PASSWORD")
+DB = os.getenv("POSTGRES_DB")
+HOST = os.getenv("POSTGRES_HOST")
+PORT = os.getenv("POSTGRES_PORT")
+TEST_DB = f"test_{DB}"
+
+
+def create_test_database():
+    try:
+        connection = connect(
+            database="postgres", user=USER, password=PASSWORD, host=HOST, port=PORT
+        )
+        connection.autocommit = True
+        with connection.cursor() as cursor:
+            cursor.execute(f"CREATE DATABASE {TEST_DB};")
+            cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+
+        connection.close()
+    except DuplicateDatabase:
+        pass
+
+
+create_test_database()
+
 
 @pytest.fixture
 def session():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
+    engine = create_engine(f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{TEST_DB}")
     SQLModel.metadata.create_all(engine)
 
     with Session(engine) as session:
