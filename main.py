@@ -11,32 +11,25 @@ from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
-# Load environment variables
 load_dotenv()
 
-# Database Configuration
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./db.sqlite3")
 engine = create_engine(DATABASE_URL, echo=True)
 
-# JWT Configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Password Hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# OAuth2 for JWT Authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 
-# Role-Based Access Control (RBAC)
 class Role(str, Enum):
     ADMIN = "admin"
     USER = "user"
 
 
-# Database Models
 class User(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     username: str = Field(unique=True, index=True)
@@ -45,17 +38,14 @@ class User(SQLModel, table=True):
     role: Role = Field(default=Role.USER)
 
 
-# Create Database Tables
 SQLModel.metadata.create_all(engine)
 
 
-# Dependency to get DB session
 def get_session():
     with Session(engine) as session:
         yield session
 
 
-# Helper Functions
 def get_user_by_username(db: Session, username: str):
     return db.exec(select(User).where(User.username == username)).first()
 
@@ -88,11 +78,14 @@ def get_current_user(
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
+
     except InvalidTokenError:
         raise credentials_exception
+
     user = get_user_by_username(db, username)
     if user is None:
         raise credentials_exception
+
     return user
 
 
@@ -102,11 +95,9 @@ def get_current_admin(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-# FastAPI App
 app = FastAPI()
 
 
-# Authentication Route
 @app.post("/token")
 def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_session)
@@ -124,7 +115,6 @@ def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-# CRUD Operations
 @app.post("/users/")
 def create_user(
     user: User,
@@ -146,7 +136,10 @@ def read_users_me(current_user: User = Depends(get_current_user)):
 def read_user(user_id: uuid.UUID, db: Session = Depends(get_session)):
     user = db.get(User, user_id)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
     return user
 
 
@@ -158,7 +151,10 @@ def update_user(
 ):
     user = db.get(User, user_id)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
     user.username = updated_user.username
     user.email = updated_user.email
     user.password = get_password_hash(updated_user.password)
@@ -173,7 +169,10 @@ def update_user(
 def delete_user(user_id: uuid.UUID, db: Session = Depends(get_session)):
     user = db.get(User, user_id)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
     db.delete(user)
     db.commit()
     return {"message": "User deleted"}
