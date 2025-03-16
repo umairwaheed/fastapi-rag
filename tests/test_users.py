@@ -3,7 +3,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, StaticPool, create_engine
 
-from main import Role, User, app, get_password_hash, get_session
+from app.main import Role, User, app, get_password_hash, get_session
 
 
 @pytest.fixture
