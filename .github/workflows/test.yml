@@ -74,6 +74,7 @@ jobs:
       - name: Run Tests with pytest
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_database
+          DATABASE_ASYNC_URL: postgresql+asyncpg://test_user:test_password@localhost:5432/test_database
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
           POSTGRES_DB: test_database
