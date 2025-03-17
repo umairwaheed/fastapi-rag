@@ -12,8 +12,8 @@ PASSWORD = os.getenv("POSTGRES_PASSWORD")
 DB = os.getenv("POSTGRES_DB")
 HOST = os.getenv("POSTGRES_HOST")
 PORT = os.getenv("POSTGRES_PORT")
-
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 engine = create_engine(DATABASE_URL, echo=os.getenv("DEBUG") == "True")
 
 connection = connect(database=DB, user=USER, password=PASSWORD, host=HOST, port=PORT)
