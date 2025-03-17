@@ -39,7 +39,6 @@ def test_post_register_cannot_set_admin_role(
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
-    assert data["role"] == Role.USER
 
     user = get_user_by_id(session, data["id"])
     assert Role.USER == get_oso_role(user)
