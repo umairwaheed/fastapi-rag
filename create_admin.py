@@ -2,9 +2,8 @@ import sys
 
 from sqlmodel import Session
 
-from app.db import engine
 from app.helpers import get_password_hash, get_user_by_username
-from app.models import Role, User
+from app.models import Role, User, engine
 from app.oso import add_oso_role, delete_oso_user
 
 if __name__ == "__main__":
