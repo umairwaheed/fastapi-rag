@@ -12,6 +12,10 @@ from app.oso import add_oso_role, delete_oso_user, is_oso_admin
 router = APIRouter()
 
 
+class RoleUpdateRequest(BaseModel):
+    role: Role
+
+
 @router.get("/")
 def get_users(
     user: User = Depends(get_current_user), session: Session = Depends(get_session)
@@ -107,10 +111,6 @@ def delete_user(
     session.delete(user)
     session.commit()
     return {"message": "User deleted"}
-
-
-class RoleUpdateRequest(BaseModel):
-    role: Role
 
 
 @router.patch("/{user_id}/role/")
