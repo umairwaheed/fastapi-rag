@@ -31,6 +31,13 @@ def test_post_register(client: TestClient, test_user_data: dict, session: Sessio
     assert Role.USER == get_oso_role(user)
 
 
+def test_post_register_with_same_data(
+    client: TestClient, test_user_data: dict, test_user: User, session: Session
+):
+    response = client.post("/auth/register/", json=test_user_data)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 def test_post_register_cannot_set_admin_role(
     client: TestClient, test_user_data: dict, session: Session
 ):

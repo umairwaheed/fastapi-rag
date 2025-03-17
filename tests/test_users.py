@@ -77,6 +77,17 @@ def test_post_user_with_less_privilege(
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
+def test_post_user_with_same_data(
+    client: TestClient, test_user_data: dict, test_user: User, admin_token: str
+):
+    response = client.post(
+        "/users/",
+        json=test_user_data,
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 def test_get_me(client: TestClient, test_user: User, user_token: str):
     response = client.get(
         "/users/me/", headers={"Authorization": f"Bearer {user_token}"}
