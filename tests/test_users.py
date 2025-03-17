@@ -1,3 +1,4 @@
+import uuid
 from fastapi import status
 from fastapi.testclient import TestClient
 
@@ -100,7 +101,9 @@ def test_put_user(client: TestClient, test_user: User, admin_token: str):
 
     data = response.json()
     assert data["username"] == "updateduser"
+    assert data["email"] == "updated@example.com"
     assert data["role"] == Role.ADMIN
+    assert uuid.UUID(data["id"]) == test_user.id
 
 
 def test_put_user_cannot_set_role(client: TestClient, test_user: User, user_token: str):
