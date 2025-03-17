@@ -5,8 +5,8 @@ from typing import Any
 
 from pgvector.sqlalchemy import Vector
 from psycopg2 import connect
-from sqlmodel import Field, SQLModel, create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlmodel import Field, SQLModel, create_engine
 
 USER = os.getenv("POSTGRES_USER")
 PASSWORD = os.getenv("POSTGRES_PASSWORD")

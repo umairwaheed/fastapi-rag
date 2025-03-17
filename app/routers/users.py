@@ -2,10 +2,10 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlmodel import select
+from sqlmodel import Session, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.dependencies import get_current_user, get_session, get_async_session
+from app.dependencies import get_async_session, get_current_user, get_session
 from app.helpers import get_password_hash, get_user_by_email, get_user_by_username
 from app.models import Role, User
 from app.oso import add_oso_role, delete_oso_user, is_oso_admin
@@ -17,8 +17,8 @@ class RoleUpdateRequest(BaseModel):
     role: Role
 
 
-@router.get("/")
-async def get_users(
+@router.get("/async/")
+async def get_users_async(
     user: User = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)
 ):
     query = select(User)
@@ -26,16 +26,25 @@ async def get_users(
     if not is_oso_admin(user):
         query = query.where(User.id == user.id)
 
-    result = await session.execute(query)
-    r = result.scalars().all()
-    print("*" * 100, r)
-    return result
+    return session.exec(query).all()
+
+
+@router.get("/")
+def get_users(
+    user: User = Depends(get_current_user), session: Session = Depends(get_session)
+):
+    query = select(User)
+
+    if not is_oso_admin(user):
+        query = query.where(User.id == user.id)
+
+    return session.exec(query).all()
 
 
 @router.post("/")
-async def post_user(
+def post_user(
     user: User,
-    session: AsyncSession = Depends(get_session),
+    session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     if not is_oso_admin(current_user):
@@ -58,26 +67,26 @@ async def post_user(
 
     user.password = get_password_hash(user.password)
     session.add(user)
-    await session.commit()
-    await session.refresh(user)
+    session.commit()
+    session.refresh(user)
     add_oso_role(user, user.role)
     return user
 
 
 @router.get("/me/")
-async def get_me(current_user: User = Depends(get_current_user)):
+def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
 @router.get("/{user_id}/")
-async def get_user(
+def get_user(
     user_id: uuid.UUID,
-    session: AsyncSession = Depends(get_session),
+    session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     user = None
     if is_oso_admin(current_user) or current_user.id == user_id:
-        user = await session.get(User, user_id)
+        user = session.get(User, user_id)
 
     if user is None:
         raise HTTPException(
@@ -88,15 +97,15 @@ async def get_user(
 
 
 @router.put("/{user_id}/")
-async def put_user(
+def put_user(
     user_id: uuid.UUID,
     updated_user: User,
-    session: AsyncSession = Depends(get_session),
+    session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     user = None
     if is_oso_admin(current_user) or current_user.id == user_id:
-        user = await session.get(User, user_id)
+        user = session.get(User, user_id)
 
     if user is None:
         raise HTTPException(
@@ -122,40 +131,40 @@ async def put_user(
     user.password = get_password_hash(updated_user.password)
 
     session.add(user)
-    await session.commit()
-    await session.refresh(user)
+    session.commit()
+    session.refresh(user)
     return user
 
 
 @router.delete("/{user_id}/")
-async def delete_user(
+def delete_user(
     user_id: uuid.UUID,
-    session: AsyncSession = Depends(get_session),
+    session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     user = None
     if is_oso_admin(current_user) or current_user.id == user_id:
-        user = await session.get(User, user_id)
+        user = session.get(User, user_id)
 
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    await session.delete(user)
-    await session.commit()
+    session.delete(user)
+    session.commit()
     delete_oso_user(user)
     return {"message": "User deleted"}
 
 
 @router.patch("/{user_id}/role/")
-async def patch_user_role(
+def patch_user_role(
     user_id: uuid.UUID,
     data: RoleUpdateRequest,
-    session: AsyncSession = Depends(get_session),
+    session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    user = await session.get(User, user_id)
+    user = session.get(User, user_id)
 
     if user is None:
         raise HTTPException(

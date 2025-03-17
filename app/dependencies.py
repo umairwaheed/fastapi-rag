@@ -6,7 +6,7 @@ from sqlmodel import Session
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.helpers import ALGORITHM, SECRET_KEY, get_user_by_username
-from app.models import Role, User, engine, async_engine
+from app.models import Role, User, async_engine, engine
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token/")
 
