@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 from app.dependencies import get_current_admin, get_current_user, get_session
 from app.helpers import get_password_hash
 from app.models import Role, User
-from app.oso import add_oso_role
+from app.oso import add_oso_role, delete_oso_user
 
 router = APIRouter()
 
@@ -127,5 +127,6 @@ def patch_user_role(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
+    delete_oso_user(user)
     add_oso_role(user, data.role)
     return {"message": "User role updated"}
