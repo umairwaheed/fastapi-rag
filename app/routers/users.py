@@ -19,14 +19,16 @@ class RoleUpdateRequest(BaseModel):
 
 @router.get("/async/")
 async def get_users_async(
-    user: User = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
 ):
     query = select(User)
 
     if not is_oso_admin(user):
         query = query.where(User.id == user.id)
 
-    return session.exec(query).all()
+    result = await session.execute(query)
+    return result.scalars().all()
 
 
 @router.get("/")
