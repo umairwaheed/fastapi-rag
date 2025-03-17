@@ -23,3 +23,7 @@ def add_oso_role(user: User, role: Role):
     oso.insert(
         ("has_role", Value("User", user.id), role, Value("Organization", "acme"))
     )
+
+
+def is_oso_admin(user: User):
+    return oso.authorize(Value("User", user.id), "edit", Value("Organization", "acme"))

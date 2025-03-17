@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 from app.dependencies import get_current_admin, get_current_user, get_session
 from app.helpers import get_password_hash
 from app.models import Role, User
-from app.oso import add_oso_role, delete_oso_user
+from app.oso import add_oso_role, delete_oso_user, is_oso_admin
 
 router = APIRouter()
 
@@ -125,6 +125,12 @@ def patch_user_role(
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    if not is_oso_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not allowed",
         )
 
     delete_oso_user(user)
