@@ -28,6 +28,13 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      ARCHIVE_URL: "https://oso-local-development-binary.s3.amazonaws.com/latest/oso-local-development-binary-linux-x86_64.tar.gz"
+      OUTPUT_FILENAME: "oso-dev-server.tar.gz"
+      OSO_URL: "http://localhost:8080"
+      DEV_OSO_URL: "http://localhost:8080"
+      OSO_API_KEY: "e_0123456789_12345_osotesttoken01xiIn"
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -48,6 +55,21 @@ jobs:
       - name: Prepare Database
         run: |
           PGPASSWORD=test_password psql -h localhost -U test_user -d test_database -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Install Oso Cloud CLI
+        run: |
+          curl -L https://cloud.osohq.com/install.sh | bash
+
+      - name: Install Oso Dev Server
+        run: |
+          curl ${ARCHIVE_URL} --output ${OUTPUT_FILENAME}
+          tar -xzf ${OUTPUT_FILENAME}
+          rm ${OUTPUT_FILENAME}
+          chmod 0700 standalone
+
+      - name: Start Oso Dev Server in the background
+        run: |
+          ./standalone oso/policy.polar &
 
       - name: Run Tests with pytest
         env:
