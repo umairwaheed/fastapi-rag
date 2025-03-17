@@ -4,6 +4,8 @@ services:
     restart: always
     env_file:
       - ../.env
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
 
   api:
     build:
@@ -17,3 +19,6 @@ services:
     depends_on:
       - db
     restart: always
+
+volumes:
+  pgvector_data:

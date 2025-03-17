@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.dependencies import get_current_user, get_session
-from app.helpers import get_password_hash
+from app.helpers import get_password_hash, get_user_by_email, get_user_by_username
 from app.models import Role, User
 from app.oso import add_oso_role, delete_oso_user, is_oso_admin
 
@@ -38,6 +38,18 @@ def post_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not allowed",
+        )
+
+    if get_user_by_username(session, user.username):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="username already exists",
+        )
+
+    if get_user_by_email(session, user.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="email already exists",
         )
 
     user.password = get_password_hash(user.password)
@@ -85,6 +97,18 @@ def put_user(
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    if get_user_by_username(session, updated_user.username):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="username already exists",
+        )
+
+    if get_user_by_email(session, updated_user.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="email already exists",
         )
 
     user.username = updated_user.username

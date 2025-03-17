@@ -20,6 +20,10 @@ def get_user_by_username(session: Session, username: str):
     return session.exec(select(User).where(User.username == username)).first()
 
 
+def get_user_by_email(session: Session, email: str):
+    return session.exec(select(User).where(User.email == email)).first()
+
+
 def get_user_by_id(session: Session, user_id: uuid.UUID):
     return session.get(User, user_id)
 
