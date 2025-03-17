@@ -16,3 +16,9 @@ def test_login_for_access_token(client: TestClient, test_user: User):
 
     payload = jwt.decode(data["access_token"], SECRET_KEY, algorithms=[ALGORITHM])
     assert test_user.username == payload.get("sub")
+
+
+def test_post_register(client: TestClient, test_user_data: dict):
+    response = client.post("/auth/register/", json=test_user_data)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["username"] == test_user_data["username"]
