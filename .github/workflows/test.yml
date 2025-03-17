@@ -79,4 +79,5 @@ jobs:
           POSTGRES_DB: test_database
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
+          OPENAI_API_KEY: fake
         run: pytest
