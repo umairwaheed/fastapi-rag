@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 from app.models import Chunk
 
 
-def test_upload_text(
+def test_post_upload_text(
     client: TestClient, sample_text, session: Session, user_token: str
 ):
     response = client.post(
@@ -27,7 +27,7 @@ def test_upload_text(
 
 
 @patch("openai.chat.completions.create")
-def test_query_text(mock_openai, client: TestClient, user_token: str):
+def test_post_query_text(mock_openai, client: TestClient, user_token: str):
     mock_openai.return_value = MagicMock()
     mock_openai.return_value.choices = [
         MagicMock(message=MagicMock(content="This is a mocked response from OpenAI."))
