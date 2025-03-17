@@ -1,9 +1,28 @@
+import os
 import uuid
 from enum import Enum
 from typing import Any
 
 from pgvector.sqlalchemy import Vector
-from sqlmodel import Field, SQLModel
+from psycopg2 import connect
+from sqlalchemy import text
+from sqlmodel import Field, SQLModel, create_engine
+
+USER = os.getenv("POSTGRES_USER")
+PASSWORD = os.getenv("POSTGRES_PASSWORD")
+DB = os.getenv("POSTGRES_DB")
+HOST = os.getenv("POSTGRES_HOST")
+PORT = os.getenv("POSTGRES_PORT")
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL, echo=os.getenv("DEBUG") == "True")
+
+connection = connect(database=DB, user=USER, password=PASSWORD, host=HOST, port=PORT)
+connection.autocommit = True
+with connection.cursor() as cursor:
+    cursor.execute("CREATE EXTENSION IF NOT EXISTS vector")
+
+connection.close()
 
 
 class Role(str, Enum):
@@ -29,3 +48,6 @@ class Chunk(SQLModel, table=True):
     document_id: uuid.UUID = Field(foreign_key="document.id")
     chunk_text: str
     embedding: Any = Field(sa_type=Vector(384))
+
+
+SQLModel.metadata.create_all(engine)
