@@ -57,6 +57,23 @@ Run the dev server.
 fastapi dev app/main.py
 ```
 
+There is a utility script to create and admin user. If you don't give password,
+the password will be set to admin. Make sure you set the OSO_API_KEY before
+running this script. If you are running Oso Dev server, then you need to set
+the following in your .env.
+
+```
+OSO_API_KEY=e_0123456789_12345_osotesttoken01xiIn
+OSO_URL=http://localhost:8081
+DEV_OSO_URL=http://localhost:8081
+```
+
+Run the script to create admin.
+
+```
+python scripts/create_admin.py <password>
+```
+
 The application will be accessible at `http://localhost:8000/`.
 The swagger documentation will be accessible at `http://localhost:8000/docs`.
 
