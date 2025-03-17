@@ -64,24 +64,37 @@ def test_get_me_with_less_privilege(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_get_user(client: TestClient, test_user: User):
-    response = client.get(f"/users/{test_user.id}")
+def test_get_user(client: TestClient, test_user: User, admin_token: str):
+    response = client.get(
+        f"/users/{test_user.id}", headers={"Authorization": f"Bearer {admin_token}"}
+    )
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["username"] == "testuser"
 
 
-def test_put_user(client: TestClient, test_user: User):
+def test_put_user(client: TestClient, test_user: User, admin_token: str):
     updated_data = {
         "username": "updateduser",
         "email": "updated@example.com",
         "password": "newpassword",
         "role": "user",
     }
-    response = client.put(f"/users/{test_user.id}/", json=updated_data)
+    response = client.put(
+        f"/users/{test_user.id}/",
+        json=updated_data,
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["username"] == "updateduser"
 
 
-def test_delete_user(client: TestClient, test_user: User):
+def test_delete_user(client: TestClient, test_user: User, admin_token: str):
+    response = client.delete(
+        f"/users/{test_user.id}/", headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_delete_user_with_less_privilege(client: TestClient, test_user: User):
     response = client.delete(f"/users/{test_user.id}/")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED

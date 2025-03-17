@@ -40,8 +40,15 @@ def get_me(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/{user_id}/")
-def get_user(user_id: uuid.UUID, session: Session = Depends(get_session)):
-    user = session.get(User, user_id)
+def get_user(
+    user_id: uuid.UUID,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    user = None
+    if current_user.role == Role.ADMIN or current_user.id == user_id:
+        user = session.get(User, user_id)
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -55,6 +62,7 @@ def put_user(
     user_id: uuid.UUID,
     updated_user: User,
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
     user = session.get(User, user_id)
     if user is None:
@@ -65,16 +73,27 @@ def put_user(
     user.username = updated_user.username
     user.email = updated_user.email
     user.password = get_password_hash(updated_user.password)
-    user.role = updated_user.role
+
+    if current_user.role == Role.ADMIN:
+        # only allow admin to change role
+        user.role = updated_user.role
+
     session.add(user)
     session.commit()
     session.refresh(user)
     return user
 
 
-@router.delete("/{user_id}/", dependencies=[Depends(get_current_admin)])
-def delete_user(user_id: uuid.UUID, session: Session = Depends(get_session)):
-    user = session.get(User, user_id)
+@router.delete("/{user_id}/")
+def delete_user(
+    user_id: uuid.UUID,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    user = None
+    if current_user.role == Role.ADMIN or current_user.id == user_id:
+        user = session.get(User, user_id)
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
