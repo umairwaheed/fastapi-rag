@@ -1,11 +1,13 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.dependencies import get_current_admin, get_current_user, get_session
 from app.helpers import get_password_hash
 from app.models import Role, User
+from app.oso import add_oso_role
 
 router = APIRouter()
 
@@ -105,3 +107,25 @@ def delete_user(
     session.delete(user)
     session.commit()
     return {"message": "User deleted"}
+
+
+class RoleUpdateRequest(BaseModel):
+    role: Role
+
+
+@router.patch("/{user_id}/role/")
+def patch_user_role(
+    user_id: uuid.UUID,
+    data: RoleUpdateRequest,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    user = session.get(User, user_id)
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    add_oso_role(user, data.role)
+    return {"message": "User role updated"}
