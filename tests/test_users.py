@@ -180,3 +180,34 @@ def test_delete_user_with_less_privilege(
         f"/users/{test_admin.id}/", headers={"Authorization": f"Bearer {user_token}"}
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_patch_user_role(client: TestClient, test_user: User, admin_token: str):
+    updated_data = {
+        "role": Role.ADMIN,
+    }
+    response = client.patch(
+        f"/users/{test_user.id}/role/",
+        json=updated_data,
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert Role.ADMIN == get_oso_role(test_user)
+
+
+def test_patch_user_role_with_less_privilege(
+    client: TestClient, test_user: User, user_token: str
+):
+    updated_data = {"role": Role.ADMIN}
+    response = client.patch(
+        f"/users/{test_user.id}/role/",
+        json=updated_data,
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    response = client.patch(
+        f"/users/{test_user.id}/role/",
+        json=updated_data,
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
