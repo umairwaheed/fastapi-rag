@@ -38,7 +38,7 @@ docker-compose build
 docker-compose up -d
 ```
 
-These commands maybe written like this as well:
+These commands maybe written like this as well.
 
 ```
 docker compose build
@@ -49,4 +49,29 @@ Run tests to see everything is working.
 
 ```
 pytest
+```
+
+Run the dev server.
+
+```
+fastapi dev app/main.py
+```
+
+The application will be accessible at `http://localhost:8000/`.
+The swagger documentation will be accessible at `http://localhost:8000/docs`.
+
+## Directory Structure
+- app: Holds application code
+- oso: Holds policy file and Dockerfile to setup dev Oso server
+- prod: Holds prod docker setup
+- scripts: Holds various utility scripts
+- tests: Holds all the tests
+
+## Deployment
+You can do the deployment using docker-compose and docker like this.
+
+```
+cd prod;
+docker-compose build
+docker-compose up -d
 ```
