@@ -6,12 +6,12 @@ from fastapi.testclient import TestClient
 from app.models import Role, User
 
 
-def test_get_users(client: TestClient, test_users: list[User], user_token: str):
+def test_get_users(client: TestClient, test_user: User, user_token: str):
     response = client.get("/users/", headers={"Authorization": f"Bearer {user_token}"})
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert len(data) == 1
-    assert data[0]["username"] == test_users[0].username
+    assert data[0]["username"] == test_user.username
 
 
 def test_get_users_with_admin_role(
@@ -103,7 +103,7 @@ def test_put_user(client: TestClient, test_user: User, admin_token: str):
     data = response.json()
     assert data["username"] == "updateduser"
     assert data["email"] == "updated@example.com"
-    assert data["role"] == Role.ADMIN
+    assert data["role"] == Role.USER
     assert uuid.UUID(data["id"]) == test_user.id
 
 

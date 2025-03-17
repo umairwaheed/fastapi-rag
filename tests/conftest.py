@@ -2,11 +2,14 @@ import os
 from datetime import timedelta
 
 import pytest
+import requests
 from fastapi.testclient import TestClient
+from oso_cloud import Oso
 from psycopg2 import connect
 from psycopg2.errors import DuplicateDatabase
 from sqlmodel import Session, SQLModel, create_engine
 
+from app import oso
 from app.dependencies import get_session
 from app.helpers import create_access_token, get_password_hash
 from app.main import app
@@ -89,6 +92,7 @@ def test_user(test_user_data, session: Session):
     session.add(user)
     session.commit()
     session.refresh(user)
+    oso.add_oso_role(user, Role.USER)
     return user
 
 
@@ -104,6 +108,7 @@ def test_admin(session: Session):
     session.add(user)
     session.commit()
     session.refresh(user)
+    oso.add_oso_role(user, Role.ADMIN)
     return user
 
 
@@ -131,3 +136,13 @@ def test_users(test_admin: User, test_user: User):
 @pytest.fixture
 def sample_text():
     return "This is a sample document for testing retrieval-augmented generation."
+
+
+@pytest.fixture(scope="function", autouse=True)
+def initialize_oso_client():
+    """Fixture that runs before each test to initialize the Oso client."""
+    dev_server_url = os.getenv("DEV_OSO_URL")
+    response = requests.post(f"{dev_server_url}/test_environment?copy=true")
+    data = response.json()
+    dev_oso = Oso(url=dev_server_url, api_key=data["token"])
+    oso.oso = dev_oso
