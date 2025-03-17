@@ -35,7 +35,8 @@ class User(SQLModel, table=True):
     email: str = Field(unique=True, index=True)
     password: str
 
-    role: str | None = Field(default=None, sa_column=None)
+    # Do not return this field in API response and don't save in DB.
+    role: str | None = Field(exclude=True, default=None, sa_column=None)
 
 
 class Document(SQLModel, table=True):
