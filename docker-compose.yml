@@ -15,8 +15,8 @@ services:
 
   oso:
     build:
-      context: .
-      dockerfile: oso.Dockerfile
+      context: ./oso
+      dockerfile: Dockerfile
     container_name: oso
     restart: always
     ports:
