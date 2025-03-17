@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from app.dependencies import get_current_admin, get_current_user, get_session
+from app.dependencies import get_current_user, get_session
 from app.helpers import get_password_hash
 from app.models import Role, User
 from app.oso import add_oso_role, delete_oso_user, is_oso_admin
@@ -22,17 +22,24 @@ def get_users(
 ):
     query = select(User)
 
-    if user.role != Role.ADMIN:
+    if not is_oso_admin(user):
         query = query.where(User.id == user.id)
 
     return session.exec(query).all()
 
 
-@router.post("/", dependencies=[Depends(get_current_admin)])
+@router.post("/")
 def post_user(
     user: User,
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
+    if not is_oso_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not allowed",
+        )
+
     user.password = get_password_hash(user.password)
     session.add(user)
     session.commit()
@@ -52,7 +59,7 @@ def get_user(
     current_user: User = Depends(get_current_user),
 ):
     user = None
-    if current_user.role == Role.ADMIN or current_user.id == user_id:
+    if is_oso_admin(current_user) or current_user.id == user_id:
         user = session.get(User, user_id)
 
     if user is None:
@@ -71,7 +78,7 @@ def put_user(
     current_user: User = Depends(get_current_user),
 ):
     user = None
-    if current_user.role == Role.ADMIN or current_user.id == user_id:
+    if is_oso_admin(current_user) or current_user.id == user_id:
         user = session.get(User, user_id)
 
     if user is None:
@@ -82,10 +89,6 @@ def put_user(
     user.username = updated_user.username
     user.email = updated_user.email
     user.password = get_password_hash(updated_user.password)
-
-    if current_user.role == Role.ADMIN:
-        # only allow admin to change role
-        user.role = updated_user.role
 
     session.add(user)
     session.commit()
@@ -100,7 +103,7 @@ def delete_user(
     current_user: User = Depends(get_current_user),
 ):
     user = None
-    if current_user.role == Role.ADMIN or current_user.id == user_id:
+    if is_oso_admin(current_user) or current_user.id == user_id:
         user = session.get(User, user_id)
 
     if user is None:
@@ -110,6 +113,7 @@ def delete_user(
 
     session.delete(user)
     session.commit()
+    delete_oso_user(user)
     return {"message": "User deleted"}
 
 
