@@ -13,6 +13,21 @@ jobs:
     name: Run Pytest
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: ankane/pgvector:latest
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_database
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -27,5 +42,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
+      - name: Wait for PostgreSQL
+        run: sleep 10
+
+      - name: Prepare Database
+        run: |
+          PGPASSWORD=test_password psql -h localhost -U test_user -d test_database -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
       - name: Run Tests with pytest
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_database
         run: pytest
