@@ -1,5 +1,4 @@
 from datetime import timedelta
-from app.oso import add_role
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,16 +13,11 @@ from app.helpers import (
     verify_password,
 )
 from app.models import Role, User
+from app.oso import add_oso_role
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 router = APIRouter()
-
-
-class RegisterUserRequest(BaseModel):
-    username: str
-    email: str
-    password: str
 
 
 class RegisterUserRequest(BaseModel):
@@ -65,5 +59,5 @@ def post_register(
     session.add(user)
     session.commit()
     session.refresh(user)
-    add_role(user, Role.USER)
+    add_oso_role(user, Role.USER)
     return user

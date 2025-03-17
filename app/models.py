@@ -5,7 +5,6 @@ from typing import Any
 
 from pgvector.sqlalchemy import Vector
 from psycopg2 import connect
-from sqlalchemy import text
 from sqlmodel import Field, SQLModel, create_engine
 
 USER = os.getenv("POSTGRES_USER")

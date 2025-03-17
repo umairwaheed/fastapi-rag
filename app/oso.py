@@ -15,5 +15,11 @@ def authorize(user: User, action: str, resource: str):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-def add_role(user: User, role: Role):
-    oso.insert(("has_role", Value("User", user.id), role, Value("Organization", "acme")))
+def delete_oso_user(user: User):
+    oso.delete(("has_role", Value("User", user.id), None, None))
+
+
+def add_oso_role(user: User, role: Role):
+    oso.insert(
+        ("has_role", Value("User", user.id), role, Value("Organization", "acme"))
+    )
