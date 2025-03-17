@@ -1,6 +1,7 @@
 services:
   db:
-    image: postgres:17.4
+    image: ankane/pgvector:v0.5.1
+    restart: always
     env_file:
       - ../.env
 
