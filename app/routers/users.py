@@ -64,7 +64,10 @@ def put_user(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    user = session.get(User, user_id)
+    user = None
+    if current_user.role == Role.ADMIN or current_user.id == user_id:
+        user = session.get(User, user_id)
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
