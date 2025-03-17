@@ -12,5 +12,6 @@ COPY ./requirements.txt /opt/code/requirements.txt
 RUN pip install -U pip && pip install --no-cache-dir -r /opt/code/requirements.txt
 
 COPY ./app /opt/code/app
+COPY ./scripts/create_admin.py /opt/code/scripts/
 
 CMD ["fastapi", "run", "app/main.py", "--port", "80"]
