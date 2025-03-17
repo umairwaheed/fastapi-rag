@@ -155,7 +155,7 @@ def test_put_user(client: TestClient, test_user: User, admin_token: str):
 
 def test_put_user_owner(client: TestClient, test_user: User, user_token: str):
     updated_data = {
-        "username": "updateduser",
+        "username": test_user.username,
         "email": "updated@example.com",
         "password": "newpassword",
         "role": Role.ADMIN,
@@ -168,7 +168,7 @@ def test_put_user_owner(client: TestClient, test_user: User, user_token: str):
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
-    assert data["username"] == "updateduser"
+    assert data["username"] == "testuser"
     assert data["email"] == "updated@example.com"
     assert verify_password("newpassword", data["password"])
     assert uuid.UUID(data["id"]) == test_user.id

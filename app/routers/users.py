@@ -99,13 +99,15 @@ def put_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    if get_user_by_username(session, updated_user.username):
+    current_user = get_user_by_username(session, updated_user.username)
+    if current_user and current_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="username already exists",
         )
 
-    if get_user_by_email(session, updated_user.email):
+    current_user = get_user_by_username(session, updated_user.username)
+    if current_user and current_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="email already exists",
