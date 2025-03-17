@@ -6,7 +6,8 @@ from oso_cloud import Oso, Value
 from app.models import Role, User
 
 api_key = os.getenv("OSO_API_KEY")
-oso = Oso(url="https://cloud.osohq.com", api_key=api_key)
+oso_url = os.getenv("OSO_URL")
+oso = Oso(url=oso_url, api_key=api_key)
 
 
 def authorize(user: User, action: str, resource: str):
