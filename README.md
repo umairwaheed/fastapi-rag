@@ -11,12 +11,20 @@ This project has following features:
 
 ## Tasks Done
 ✅ Sophisticated CRUD operations for user profile management
+
 ✅ JWT-based authentication & authorization
+
 ✅ A RAG pipeline to process and query large text documents using AI
+
 ✅ Dynamic Role-Based Access Control (RBAC) using the Oso framework
+
 ✅ Documentation & code submission via GitHub
+
 ✅ Deployment
+
 ✅ Comprehensive unittests
+
+✅ CI/CD pipeline integration
 
 ## Technology Stack
 - Python 3.13
