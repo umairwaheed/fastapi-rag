@@ -26,5 +26,15 @@ def add_oso_role(user: User, role: Role):
     )
 
 
+def get_oso_role(user: User):
+    response = oso.get(
+        ("has_role", Value("User", user.id), None, Value("Organization", "acme"))
+    )
+    try:
+        return response[0][2].id
+    except Exception:
+        pass
+
+
 def is_oso_admin(user: User):
     return oso.authorize(Value("User", user.id), "edit", Value("Organization", "acme"))

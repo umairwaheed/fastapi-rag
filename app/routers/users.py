@@ -44,6 +44,7 @@ def post_user(
     session.add(user)
     session.commit()
     session.refresh(user)
+    add_oso_role(user, user.role)
     return user
 
 

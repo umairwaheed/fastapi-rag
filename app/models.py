@@ -34,7 +34,8 @@ class User(SQLModel, table=True):
     username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     password: str
-    role: Role = Field(default=Role.USER)
+
+    role: str | None = Field(default=None, sa_column=None)
 
 
 class Document(SQLModel, table=True):

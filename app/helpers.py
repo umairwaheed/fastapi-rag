@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -15,8 +16,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
-def get_user_by_username(db: Session, username: str):
-    return db.exec(select(User).where(User.username == username)).first()
+def get_user_by_username(session: Session, username: str):
+    return session.exec(select(User).where(User.username == username)).first()
+
+
+def get_user_by_id(session: Session, user_id: uuid.UUID):
+    return session.get(User, user_id)
 
 
 def verify_password(plain_password, hashed_password):

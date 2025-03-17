@@ -2,8 +2,11 @@ import uuid
 
 from fastapi import status
 from fastapi.testclient import TestClient
+from sqlmodel import Session
 
+from app.helpers import get_user_by_id
 from app.models import Role, User
+from app.oso import get_oso_role
 
 
 def test_get_users(client: TestClient, test_user: User, user_token: str):
@@ -29,14 +32,35 @@ def test_get_users_with_less_privilege(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_post_user(client: TestClient, test_user_data: dict, admin_token: str):
+def test_post_user(
+    client: TestClient, test_user_data: dict, admin_token: str, session: Session
+):
     response = client.post(
         "/users/",
         json=test_user_data,
         headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["username"] == test_user_data["username"]
+    data = response.json()
+    assert data["username"] == test_user_data["username"]
+    user = get_user_by_id(session, uuid.UUID(data["id"]))
+    assert Role.USER == get_oso_role(user)
+
+
+def test_post_user_can_create_admin(
+    client: TestClient, test_user_data: dict, admin_token: str, session: Session
+):
+    test_user_data["role"] = Role.ADMIN
+    response = client.post(
+        "/users/",
+        json=test_user_data,
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["username"] == test_user_data["username"]
+    user = get_user_by_id(session, uuid.UUID(data["id"]))
+    assert Role.ADMIN == get_oso_role(user)
 
 
 def test_post_user_with_less_privilege(
@@ -86,7 +110,9 @@ def test_get_user_with_less_privilege(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_put_user(client: TestClient, test_user: User, admin_token: str):
+def test_put_user(
+    client: TestClient, test_user: User, admin_token: str, session: Session
+):
     updated_data = {
         "username": "updateduser",
         "email": "updated@example.com",
@@ -103,28 +129,11 @@ def test_put_user(client: TestClient, test_user: User, admin_token: str):
     data = response.json()
     assert data["username"] == "updateduser"
     assert data["email"] == "updated@example.com"
-    assert data["role"] == Role.USER
     assert uuid.UUID(data["id"]) == test_user.id
 
-
-def test_put_user_cannot_set_role(client: TestClient, test_user: User, user_token: str):
-    updated_data = {
-        "username": "updateduser",
-        "email": "updated@example.com",
-        "password": "newpassword",
-        "role": Role.ADMIN,
-    }
-    response = client.put(
-        f"/users/{test_user.id}/",
-        json=updated_data,
-        headers={"Authorization": f"Bearer {user_token}"},
-    )
-    assert response.status_code == status.HTTP_200_OK
-
-    data = response.json()
-    assert data["username"] == "updateduser"
-    assert data["email"] == "updated@example.com"
-    assert data["role"] == Role.USER
+    session.refresh(test_user)
+    # make sure this endpoint cannot set role
+    assert Role.USER == get_oso_role(test_user)
 
 
 def test_put_user_with_less_privilege(
