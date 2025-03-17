@@ -55,6 +55,7 @@ create_test_database()
 @pytest.fixture
 def session():
     engine = create_engine(f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{TEST_DB}")
+
     SQLModel.metadata.create_all(engine)
 
     with Session(engine) as session:

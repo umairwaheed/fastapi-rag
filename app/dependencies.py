@@ -3,15 +3,21 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.helpers import ALGORITHM, SECRET_KEY, get_user_by_username
-from app.models import Role, User, engine
+from app.models import Role, User, engine, async_engine
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token/")
 
 
 def get_session():
     with Session(engine) as session:
+        yield session
+
+
+async def get_async_session():
+    async with AsyncSession(async_engine) as session:
         yield session
 
 
