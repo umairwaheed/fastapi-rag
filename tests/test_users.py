@@ -4,7 +4,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.helpers import get_user_by_id
+from app.helpers import get_user_by_id, verify_password
 from app.models import Role, User
 from app.oso import get_oso_role
 
@@ -98,6 +98,14 @@ def test_get_user(client: TestClient, test_user: User, admin_token: str):
     assert response.json()["username"] == "testuser"
 
 
+def test_get_user_owner(client: TestClient, test_user: User, user_token: str):
+    response = client.get(
+        f"/users/{test_user.id}/", headers={"Authorization": f"Bearer {user_token}"}
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["username"] == "testuser"
+
+
 def test_get_user_with_less_privilege(
     client: TestClient, test_admin: User, user_token: str
 ):
@@ -110,9 +118,7 @@ def test_get_user_with_less_privilege(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_put_user(
-    client: TestClient, test_user: User, admin_token: str, session: Session
-):
+def test_put_user(client: TestClient, test_user: User, admin_token: str):
     updated_data = {
         "username": "updateduser",
         "email": "updated@example.com",
@@ -129,9 +135,33 @@ def test_put_user(
     data = response.json()
     assert data["username"] == "updateduser"
     assert data["email"] == "updated@example.com"
+    assert verify_password("newpassword", data["password"])
     assert uuid.UUID(data["id"]) == test_user.id
 
-    session.refresh(test_user)
+    # make sure this endpoint cannot set role
+    assert Role.USER == get_oso_role(test_user)
+
+
+def test_put_user_owner(client: TestClient, test_user: User, user_token: str):
+    updated_data = {
+        "username": "updateduser",
+        "email": "updated@example.com",
+        "password": "newpassword",
+        "role": Role.ADMIN,
+    }
+    response = client.put(
+        f"/users/{test_user.id}/",
+        json=updated_data,
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert data["username"] == "updateduser"
+    assert data["email"] == "updated@example.com"
+    assert verify_password("newpassword", data["password"])
+    assert uuid.UUID(data["id"]) == test_user.id
+
     # make sure this endpoint cannot set role
     assert Role.USER == get_oso_role(test_user)
 
@@ -163,7 +193,7 @@ def test_delete_user(client: TestClient, test_user: User, admin_token: str):
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_user_current_user(client: TestClient, test_user: User, user_token: str):
+def test_delete_user_owner(client: TestClient, test_user: User, user_token: str):
     response = client.delete(
         f"/users/{test_user.id}/", headers={"Authorization": f"Bearer {user_token}"}
     )
