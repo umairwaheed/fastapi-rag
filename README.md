@@ -9,6 +9,15 @@ This project has following features:
 - Integrates Swagger
 - Implements deployment using Docker
 
+## Tasks Done
+✅ Sophisticated CRUD operations for user profile management
+✅ JWT-based authentication & authorization
+✅ A RAG pipeline to process and query large text documents using AI
+✅ Dynamic Role-Based Access Control (RBAC) using the Oso framework
+✅ Documentation & code submission via GitHub
+✅ Deployment
+✅ Comprehensive unittests
+
 ## Technology Stack
 - Python 3.13
 - PG Vector 0.5.1
