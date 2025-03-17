@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from app.dependencies import get_session
+from app.dependencies import get_current_user, get_session
 from app.helpers import chunk_text, create_embedding
 from app.models import Chunk, Document
 
@@ -19,7 +19,7 @@ class QueryRequest(BaseModel):
     text: str
 
 
-@router.post("/upload/")
+@router.post("/upload/", dependencies=[Depends(get_current_user)])
 def upload_text(document: Document, session: Session = Depends(get_session)):
     session.add(document)
     session.commit()
@@ -40,7 +40,7 @@ def upload_text(document: Document, session: Session = Depends(get_session)):
     }
 
 
-@router.post("/query/")
+@router.post("/query/", dependencies=[Depends(get_current_user)])
 def query_text(request: QueryRequest, session: Session = Depends(get_session)):
     query_embedding = create_embedding(request.text)
 

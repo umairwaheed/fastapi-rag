@@ -7,8 +7,14 @@ from sqlmodel import Session, select
 from app.models import Chunk
 
 
-def test_upload_text(client: TestClient, sample_text, session: Session):
-    response = client.post("/rag/upload/", json={"text": sample_text})
+def test_upload_text(
+    client: TestClient, sample_text, session: Session, user_token: str
+):
+    response = client.post(
+        "/rag/upload/",
+        json={"text": sample_text},
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert "document_id" in data
@@ -21,13 +27,17 @@ def test_upload_text(client: TestClient, sample_text, session: Session):
 
 
 @patch("openai.chat.completions.create")
-def test_query_text(mock_openai, client: TestClient):
+def test_query_text(mock_openai, client: TestClient, user_token: str):
     mock_openai.return_value = MagicMock()
     mock_openai.return_value.choices = [
         MagicMock(message=MagicMock(content="This is a mocked response from OpenAI."))
     ]
 
-    response = client.post("/rag/query/", json={"text": "What is the document about?"})
+    response = client.post(
+        "/rag/query/",
+        json={"text": "What is the document about?"},
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
     assert response.status_code == 200
     data = response.json()
     assert "answer" in data
